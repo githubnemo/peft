@@ -46,8 +46,7 @@ define EXPERIMENT_template
 $(call exp_to_res,$(1)): $(1)/adapter_config.json $(wildcard $(1)/training_params.json) $(RUN_SCRIPT)
 	@echo "---"
 	@echo "Running experiment: $(1)"
-	echo $(PYTHON) $(RUN_SCRIPT) --experiment_path $(1)
-	#touch $$@
+	$(PYTHON) $(RUN_SCRIPT) -v $(1)
 	@echo "Finished: $$@"
 	@echo "---"
 

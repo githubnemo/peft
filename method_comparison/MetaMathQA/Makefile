@@ -43,7 +43,7 @@ define EXPERIMENT_template
 # The target is the result file (e.g., results/lora-llama-3.2-3B-rank32.json).
 # The dependencies are its config files and the main run script.
 # If any dependency is newer than the target, the recipe runs.
-$(call exp_to_res,$(1)): $(1)/adapter_config.json $(wildcard $(1)/training_params.json) $(RUN_SCRIPT)
+$(call exp_to_res,$(1)): $(1)/adapter_config.json $(wildcard $(1)/training_params.json)
 	@echo "---"
 	@echo "Running experiment: $(1)"
 	$(PYTHON) $(RUN_SCRIPT) -v $(1)

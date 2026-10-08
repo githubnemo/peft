@@ -270,6 +270,9 @@ class LoraLayer(BaseTunerLayer):
         self.lora_A[adapter_name] = nn.Linear(self.in_features, r, bias=False)
         self.lora_B[adapter_name] = nn.Linear(r, self.out_features, bias=lora_bias)
 
+        # lora_A.weight.shape == [r, self.in_features]
+        # lora_B.weight.shape == [self.out_features, r]
+
         # Tying adapters is only implemented for Linear layers
         # where the source is the embedding layer.
         # Currently, this is the most prevalent way of tying layers (weight tying)
@@ -1180,9 +1183,9 @@ class Linear(nn.Module, LoraLayer):
                 if active_adapter not in self.lora_variant:  # vanilla LoRA
                     if USE_AUTOMODEL_LORA_KERNEL:
                         result = result + AUTOMODEL_LORA_KERNEL_FORWARD(
-                            x=x.reshape(-1, lora_A.weight.data.shape[0]),
-                            lora_A=lora_A.weight.data,
-                            lora_B=lora_B.weight.data,
+                            x=x.reshape(-1, lora_A.weight.data.shape[1]),
+                            lora_A=lora_A.weight.data.T,
+                            lora_B=lora_B.weight.data.T,
                             res=None,
                             scale=scaling,
                             dtype=result.dtype,

@@ -1181,8 +1181,8 @@ class Linear(nn.Module, LoraLayer):
                     if USE_AUTOMODEL_LORA_KERNEL:
                         result = result + AUTOMODEL_LORA_KERNEL_FORWARD(
                             x=x,
-                            lora_A=lora_A,
-                            lora_B=lora_B,
+                            lora_A=lora_A.weight,
+                            lora_B=lora_B.weight,
                             res=None,
                             scale=scaling,
                             dtype=result.dtype,

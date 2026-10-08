@@ -1180,13 +1180,13 @@ class Linear(nn.Module, LoraLayer):
                 if active_adapter not in self.lora_variant:  # vanilla LoRA
                     if USE_AUTOMODEL_LORA_KERNEL:
                         result = result + AUTOMODEL_LORA_KERNEL_FORWARD(
-                            x=x,
-                            lora_A=lora_A.weight,
-                            lora_B=lora_B.weight,
+                            x=x.reshape(-1, lora_A.shape[0]),
+                            lora_A=lora_A.weight.data,
+                            lora_B=lora_B.weight.data,
                             res=None,
                             scale=scaling,
                             dtype=result.dtype,
-                        )
+                        ).reshape(*result.shape)
                     else:
                         result = result + lora_B(lora_A(dropout(x))) * scaling
                 else:

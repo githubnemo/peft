@@ -51,6 +51,13 @@ from .config import LoraConfig
 VARIANT_KWARG_KEYS = ["alora_offsets"]
 
 
+USE_AUTOMODEL_LORA_KERNEL = True
+
+if USE_AUTOMODEL_LORA_KERNEL:
+    import nemo_automodel.components._peft.lora_kernel
+    AUTOMODEL_LORA_KERNEL_FORWARD = nemo_automodel.components._peft.lora_kernel.lora_forward_wrapper
+
+
 class LoraVariant:
     """
     Base class for LoRA variants, e.g. DoRA.
@@ -1157,6 +1164,12 @@ class Linear(nn.Module, LoraLayer):
         elif self.merged:
             result = self.base_layer(x, *args, **kwargs)
         else:
+
+            if USE_AUTOMODEL_LORA_KERNEL:
+                AUTOMODEL_LORA_KERNEL_FORWARD(x, lora_A, lora_B, None, scaling)
+
+                return result
+
             result = self.base_layer(x, *args, **kwargs)
             torch_result_dtype = result.dtype
 
@@ -1173,14 +1186,24 @@ class Linear(nn.Module, LoraLayer):
                 if active_adapter not in self.lora_variant:  # vanilla LoRA
                     result = result + lora_B(lora_A(dropout(x))) * scaling
                 else:
-                    result = self.lora_variant[active_adapter].forward(
-                        self,
-                        active_adapter=active_adapter,
-                        x=x,
-                        result=result,
-                        **variant_kwargs,
-                        **kwargs,
-                    )
+                    if USE_AUTOMODEL_LORA_KERNEL:
+                        result = result + AUTOMODEL_LORA_KERNEL_FORWARD(
+                            x=x,
+                            lora_A=lora_A,
+                            lora_B=lora_B,
+                            res=None,
+                            scale=scaling,
+                            dtype=result.dtype,
+                        )
+                    else:
+                        result = self.lora_variant[active_adapter].forward(
+                            self,
+                            active_adapter=active_adapter,
+                            x=x,
+                            result=result,
+                            **variant_kwargs,
+                            **kwargs,
+                        )
 
             result = result.to(torch_result_dtype)
 
